@@ -2,25 +2,33 @@ const express = require("express");
 const cors = require("cors");
 
 const requestRoutes = require("./routes/requestRoutes");
-const requestLogger = require("./middlewares/requestLogger");
+const authRoutes = require("./routes/authRoutes");
+
 const errorHandler = require("./middlewares/errorHandler");
+const requestLogger = require("./middlewares/requestLogger");
 
 const app = express();
 
-// Global middlewares
+
+// 🟢 MIDDLEWARES
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" })); // for image base64
 app.use(requestLogger);
 
-// Health check
+
+// 🟢 HEALTH CHECK
 app.get("/health", (req, res) => {
-  res.json({ status: "Server running" });
+  res.json({ status: "Server running 🚀" });
 });
 
-// Routes
+
+// 🟢 ROUTES
+app.use("/auth", authRoutes);
 app.use("/requests", requestRoutes);
 
-// Error handler (MUST be last)
+
+// 🟢 ERROR HANDLER (last)
 app.use(errorHandler);
+
 
 module.exports = app;
