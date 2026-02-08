@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import ActivityFeed from "../components/ActivityFeed";
 
 function StudentDashboard() {
   const [title, setTitle] = useState("");
@@ -12,35 +13,32 @@ function StudentDashboard() {
   }, []);
 
   const fetchRequests = async () => {
-    const res = await API.get("/requests");
-    setRequests(res.data.data);
+    try {
+      const res = await API.get("/requests");
+      setRequests(res.data.data);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
-  const convertImage = (e) => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-
-    reader.onloadend = () => {
-      setImage(reader.result);
-    };
-
-    if (file) reader.readAsDataURL(file);
-  };
-
-  const create = async (e) => {
+  const createRequest = async (e) => {
     e.preventDefault();
 
-    await API.post("/requests", {
-      title,
-      description,
-      image,
-    });
+    try {
+      await API.post("/requests", {
+        title,
+        description,
+        image,
+      });
 
-    alert("Request created");
-    setTitle("");
-    setDescription("");
-    setImage("");
-    fetchRequests();
+      alert("Request created");
+      setTitle("");
+      setDescription("");
+      setImage("");
+      fetchRequests();
+    } catch {
+      alert("Error creating request");
+    }
   };
 
   const logout = () => {
@@ -55,7 +53,7 @@ function StudentDashboard() {
 
       <h3>Create Request</h3>
 
-      <form onSubmit={create}>
+      <form onSubmit={createRequest}>
         <input
           placeholder="Title"
           value={title}
@@ -72,43 +70,51 @@ function StudentDashboard() {
         />
         <br/><br/>
 
-        <input type="file" onChange={convertImage}/>
+        <input
+          placeholder="Image URL (optional)"
+          value={image}
+          onChange={(e)=>setImage(e.target.value)}
+        />
         <br/><br/>
 
         <button type="submit">Submit Request</button>
       </form>
 
-      <hr/>
-      <h3>My Requests</h3>
+      <hr />
 
-      {requests.map((r)=>(
-        <div key={r._id} style={{border:"1px solid gray",padding:10,margin:10}}>
-          <b>{r.title}</b>
-          <p>{r.description}</p>
+      <h3>All Requests</h3>
 
-          {r.image && <img src={r.image} width="200"/>}
+      {requests.map((req) => (
+        <div
+          key={req._id}
+          style={{ border: "1px solid gray", margin: 10, padding: 10 }}
+        >
+          <b>{req.title}</b>
+          <p>{req.description}</p>
 
-          <p>Status: {r.status}</p>
+          {req.image && <img src={req.image} width="200" />}
 
-          <p>
-            Created: {new Date(r.createdAt).toLocaleString()}
-          </p>
+          <p>Status: {req.status}</p>
 
-          {r.assignedTo && (
-            <p>Assigned to: {r.assignedTo.name}</p>
+          {req.createdAt && (
+            <p>
+              Created: {new Date(req.createdAt).toLocaleString()}
+            </p>
           )}
 
-          {r.closedAt && (
-            <p>Closed: {new Date(r.closedAt).toLocaleString()}</p>
+          {req.assignedTo && (
+            <p>Assigned to: {req.assignedTo.name}</p>
           )}
 
-          {r.rejectReason && (
-            <p style={{color:"red"}}>
-              Rejected: {r.rejectReason}
+          {req.closedAt && (
+            <p>
+              Closed: {new Date(req.closedAt).toLocaleString()}
             </p>
           )}
         </div>
       ))}
+
+      <ActivityFeed />
     </div>
   );
 }

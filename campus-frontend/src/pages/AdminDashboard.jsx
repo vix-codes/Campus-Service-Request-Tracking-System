@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import ActivityFeed from "../components/ActivityFeed";
 
 function AdminDashboard() {
   const [requests, setRequests] = useState([]);
   const [staff, setStaff] = useState([]);
-  const [selectedStaff, setSelectedStaff] = useState({});
-  const [newUser, setNewUser] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "staff",
-  });
+  const [selectedStaff, setSelectedStaff] = useState("");
+
+  const [name,setName]=useState("");
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
+  const [role,setRole]=useState("staff");
 
   useEffect(() => {
     fetchRequests();
@@ -28,25 +28,39 @@ function AdminDashboard() {
   };
 
   const assign = async (id) => {
-    const staffId = selectedStaff[id];
-    if (!staffId) return alert("Select staff");
+    if (!selectedStaff) return alert("Select staff");
 
-    await API.put(`/requests/assign/${id}`, { staffId });
-    alert("Assigned");
+    await API.put(`/requests/assign/${id}`, {
+      staffId: selectedStaff,
+    });
+
     fetchRequests();
   };
 
   const deleteReq = async (id) => {
-    if (!window.confirm("Delete?")) return;
+    if (!window.confirm("Delete request?")) return;
+
     await API.delete(`/requests/${id}`);
     fetchRequests();
   };
 
-  const createUser = async () => {
-    await API.post("/auth/create-user", newUser);
-    alert("User created");
-    setNewUser({ name:"",email:"",password:"",role:"staff" });
-    fetchStaff();
+  const createUser = async (e) => {
+    e.preventDefault();
+
+    try {
+      await API.post("/auth/create-user", {
+        name,
+        email,
+        password,
+        role,
+      });
+
+      alert("User created");
+      setName(""); setEmail(""); setPassword("");
+      fetchStaff();
+    } catch {
+      alert("Error creating user");
+    }
   };
 
   const logout = () => {
@@ -59,94 +73,67 @@ function AdminDashboard() {
       <button onClick={logout}>Logout</button>
       <h2>Admin Dashboard</h2>
 
-      {/* CREATE STAFF/STUDENT */}
-      <h3>Create User</h3>
+      {/* CREATE USER */}
+      <h3>Create Staff/Admin</h3>
+      <form onSubmit={createUser}>
+        <input placeholder="Name" value={name} onChange={e=>setName(e.target.value)} required/>
+        <br/><br/>
 
-      <input
-        placeholder="Name"
-        value={newUser.name}
-        onChange={(e)=>setNewUser({...newUser,name:e.target.value})}
-      />
-      <br/><br/>
+        <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} required/>
+        <br/><br/>
 
-      <input
-        placeholder="Email"
-        value={newUser.email}
-        onChange={(e)=>setNewUser({...newUser,email:e.target.value})}
-      />
-      <br/><br/>
+        <input placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} required/>
+        <br/><br/>
 
-      <input
-        placeholder="Password"
-        value={newUser.password}
-        onChange={(e)=>setNewUser({...newUser,password:e.target.value})}
-      />
-      <br/><br/>
+        <select value={role} onChange={e=>setRole(e.target.value)}>
+          <option value="staff">Staff</option>
+          <option value="admin">Admin</option>
+        </select>
+        <br/><br/>
 
-      <select
-        value={newUser.role}
-        onChange={(e)=>setNewUser({...newUser,role:e.target.value})}
-      >
-        <option value="staff">Staff</option>
-        <option value="student">Student</option>
-        <option value="admin">Admin</option>
-      </select>
-
-      <br/><br/>
-      <button onClick={createUser}>Create User</button>
+        <button>Create User</button>
+      </form>
 
       <hr/>
+
+      {/* REQUESTS */}
       <h3>All Requests</h3>
 
-      {requests.map((r)=>(
-        <div key={r._id} style={{border:"1px solid gray",margin:10,padding:10}}>
-          <b>{r.title}</b>
-          <p>{r.description}</p>
+      {requests.map((req) => (
+        <div key={req._id} style={{border:"1px solid gray",margin:10,padding:10}}>
+          <b>{req.title}</b>
+          <p>{req.description}</p>
 
-          {r.image && <img src={r.image} width="200"/>}
+          {req.image && <img src={req.image} width="200"/>}
 
-          <p>Status: {r.status}</p>
+          <p>Status: {req.status}</p>
 
-          {r.createdBy && <p>Created by: {r.createdBy.name}</p>}
-          {r.assignedTo && <p>Assigned to: {r.assignedTo.name}</p>}
-          {r.closedBy && <p>Closed by: {r.closedBy.name}</p>}
+          {req.createdBy && <p>By: {req.createdBy.name}</p>}
+          {req.assignedTo && <p>Staff: {req.assignedTo.name}</p>}
 
-          <p>Created: {new Date(r.createdAt).toLocaleString()}</p>
+          {req.createdAt && <p>Created: {new Date(req.createdAt).toLocaleString()}</p>}
+          {req.assignedAt && <p>Assigned: {new Date(req.assignedAt).toLocaleString()}</p>}
+          {req.closedAt && <p>Closed: {new Date(req.closedAt).toLocaleString()}</p>}
 
-          {r.assignedAt && (
-            <p>Assigned: {new Date(r.assignedAt).toLocaleString()}</p>
-          )}
-
-          {r.closedAt && (
-            <p>Closed: {new Date(r.closedAt).toLocaleString()}</p>
-          )}
-
-          {r.rejectReason && (
-            <p style={{color:"red"}}>Reject: {r.rejectReason}</p>
-          )}
-
-          {/* ASSIGN */}
-          {!r.assignedTo && r.status === "Open" && (
+          {!req.assignedTo && (
             <>
-              <select
-                onChange={(e)=>
-                  setSelectedStaff({...selectedStaff,[r._id]:e.target.value})
-                }
-              >
+              <select onChange={(e)=>setSelectedStaff(e.target.value)}>
                 <option>Select staff</option>
                 {staff.map(s=>(
                   <option key={s._id} value={s._id}>{s.name}</option>
                 ))}
               </select>
 
-              <button onClick={()=>assign(r._id)}>Assign</button>
+              <button onClick={()=>assign(req._id)}>Assign</button>
             </>
           )}
 
           <br/>
-          <button onClick={()=>deleteReq(r._id)}>Delete</button>
+          <button onClick={()=>deleteReq(req._id)}>Delete</button>
         </div>
       ))}
+
+      <ActivityFeed />
     </div>
   );
 }

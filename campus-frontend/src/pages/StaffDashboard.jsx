@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import ActivityFeed from "../components/ActivityFeed";
 
 function StaffDashboard() {
   const [requests, setRequests] = useState([]);
@@ -24,7 +25,6 @@ function StaffDashboard() {
         status: "In Progress",
       });
 
-      alert("Work started");
       fetchRequests();
     } catch {
       alert("Error");
@@ -37,7 +37,6 @@ function StaffDashboard() {
         status: "Closed",
       });
 
-      alert("Task closed");
       fetchRequests();
     } catch {
       alert("Error");
@@ -56,7 +55,6 @@ function StaffDashboard() {
         reason: reason,
       });
 
-      alert("Task rejected");
       setReason("");
       fetchRequests();
     } catch {
@@ -74,9 +72,9 @@ function StaffDashboard() {
       <button onClick={logout}>Logout</button>
       <h2>Staff Dashboard</h2>
 
-      {requests.length === 0 && <p>No assigned work</p>}
-
-      {requests.map((req) => (
+      {requests
+        .filter(r => r.assignedTo)
+        .map((req) => (
         <div
           key={req._id}
           style={{ border: "1px solid gray", margin: 10, padding: 10 }}
@@ -96,7 +94,6 @@ function StaffDashboard() {
             <p>Assigned: {new Date(req.assignedAt).toLocaleString()}</p>
           )}
 
-          {/* 🔵 BUTTON LOGIC */}
           {req.status === "Assigned" && (
             <button onClick={() => startWork(req._id)}>
               Start Work
@@ -109,7 +106,7 @@ function StaffDashboard() {
                 Close
               </button>
 
-              <br /><br />
+              <br/><br/>
               <input
                 placeholder="Reject reason"
                 value={reason}
@@ -125,6 +122,8 @@ function StaffDashboard() {
           {req.status === "Closed" && <b>Closed ✔</b>}
         </div>
       ))}
+
+      <ActivityFeed />
     </div>
   );
 }

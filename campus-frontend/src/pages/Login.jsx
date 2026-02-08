@@ -14,13 +14,16 @@ function Login() {
         password,
       });
 
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      const token = res.data.token;
+      const role = res.data.role;
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
 
       alert("Login success");
       window.location.reload();
-
     } catch (err) {
+      console.log(err);
       alert("Login failed");
     }
   };
@@ -35,7 +38,7 @@ function Login() {
           value={email}
           onChange={(e)=>setEmail(e.target.value)}
         />
-        <br /><br />
+        <br/><br/>
 
         <input
           type="password"
@@ -43,7 +46,7 @@ function Login() {
           value={password}
           onChange={(e)=>setPassword(e.target.value)}
         />
-        <br /><br />
+        <br/><br/>
 
         <button type="submit">Login</button>
       </form>
