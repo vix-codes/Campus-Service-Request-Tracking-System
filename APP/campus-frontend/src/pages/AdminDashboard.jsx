@@ -6,12 +6,8 @@ import NoticeBanner from "../components/NoticeBanner";
 function AdminDashboard() {
   const [requests, setRequests] = useState([]);
   const [staff, setStaff] = useState([]);
-<<<<<<< HEAD
   const [selectedStaffByRequestId, setSelectedStaffByRequestId] = useState({});
-=======
-  const [selectedStaff, setSelectedStaff] = useState("");
   const [notice, setNotice] = useState(null);
->>>>>>> 0ef72d2c0b21a2facd061fb285389aa5fbce0281
 
   const [name,setName]=useState("");
   const [email,setEmail]=useState("");
@@ -34,29 +30,21 @@ function AdminDashboard() {
   };
 
   const assign = async (id) => {
-<<<<<<< HEAD
     const staffId = selectedStaffByRequestId[id];
-    if (!staffId) return alert("Select staff for this request");
-
-    await API.put(`/requests/assign/${id}`, {
-      staffId,
-    });
-=======
-    if (!selectedStaff) {
+    if (!staffId) {
       setNotice({ tone: "error", message: "Select a staff member to assign." });
       return;
     }
 
     try {
       await API.put(`/requests/assign/${id}`, {
-        staffId: selectedStaff,
+        staffId,
       });
       setNotice({ tone: "success", message: "Request assigned successfully." });
     } catch (err) {
       console.log(err);
       setNotice({ tone: "error", message: "Unable to assign request." });
     }
->>>>>>> 0ef72d2c0b21a2facd061fb285389aa5fbce0281
 
     setSelectedStaffByRequestId((prev) => ({ ...prev, [id]: "" }));
     fetchRequests();
@@ -179,8 +167,13 @@ function AdminDashboard() {
                   <>
                     <select
                       className="select"
-                      onChange={(e)=>setSelectedStaff(e.target.value)}
-                      defaultValue=""
+                      value={selectedStaffByRequestId[req._id] || ""}
+                      onChange={(e) =>
+                        setSelectedStaffByRequestId((prev) => ({
+                          ...prev,
+                          [req._id]: e.target.value,
+                        }))
+                      }
                     >
                       <option value="" disabled>Select staff</option>
                       {staff.map(s=>(
@@ -191,43 +184,10 @@ function AdminDashboard() {
                     <button className="button button--primary" onClick={()=>assign(req._id)}>Assign</button>
                   </>
                 )}
-
-<<<<<<< HEAD
-          {req.createdAt && <p>Created: {new Date(req.createdAt).toLocaleString()}</p>}
-          {req.assignedAt && <p>Assigned: {new Date(req.assignedAt).toLocaleString()}</p>}
-          {req.closedAt && <p>Closed: {new Date(req.closedAt).toLocaleString()}</p>}
-
-          {!req.assignedTo && (
-            <>
-              <select
-                value={selectedStaffByRequestId[req._id] || ""}
-                onChange={(e) =>
-                  setSelectedStaffByRequestId((prev) => ({
-                    ...prev,
-                    [req._id]: e.target.value,
-                  }))
-                }
-              >
-                <option value="">Select staff</option>
-                {staff.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-
-              <button onClick={() => assign(req._id)}>Assign</button>
-            </>
-          )}
-
-          <br/>
-          <button onClick={()=>deleteReq(req._id)}>Delete</button>
-=======
                 <button className="button button--danger" onClick={()=>deleteReq(req._id)}>Delete</button>
               </div>
             </div>
           ))}
->>>>>>> 0ef72d2c0b21a2facd061fb285389aa5fbce0281
         </div>
       </div>
 

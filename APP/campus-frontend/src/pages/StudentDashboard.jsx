@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import ActivityFeed from "../components/ActivityFeed";
-<<<<<<< HEAD
-import ViewRequests from "./ViewRequests";
-=======
 import NoticeBanner from "../components/NoticeBanner";
->>>>>>> 0ef72d2c0b21a2facd061fb285389aa5fbce0281
 
 function StudentDashboard() {
   const [title, setTitle] = useState("");
@@ -53,82 +49,11 @@ function StudentDashboard() {
   };
 
   return (
-<<<<<<< HEAD
-    <div style={{ padding: 20 }}>
-      <button onClick={logout}>Logout</button>
-      <h2>Student Dashboard</h2>
-
-      <h3>Create Request</h3>
-
-      <form onSubmit={createRequest}>
-        <input
-          placeholder="Title"
-          value={title}
-          onChange={(e)=>setTitle(e.target.value)}
-          required
-        />
-        <br/><br/>
-
-        <textarea
-          placeholder="Description"
-          value={description}
-          onChange={(e)=>setDescription(e.target.value)}
-          required
-        />
-        <br/><br/>
-
-        <input
-          placeholder="Image URL (optional)"
-          value={image}
-          onChange={(e)=>setImage(e.target.value)}
-        />
-        <br/><br/>
-
-        <button type="submit">Submit Request</button>
-      </form>
-
-      <hr />
-
-      <ViewRequests />
-
-      <hr />
-
-      <h3>All Requests</h3>
-
-      {requests.map((req) => (
-        <div
-          key={req._id}
-          style={{ border: "1px solid gray", margin: 10, padding: 10 }}
-        >
-          <b>{req.title}</b>
-          <p>{req.description}</p>
-
-          {req.image && <img src={req.image} width="200" />}
-
-          <p>Status: {req.status}</p>
-
-          {req.createdAt && (
-            <p>
-              Created: {new Date(req.createdAt).toLocaleString()}
-            </p>
-          )}
-
-          {req.assignedTo && (
-            <p>Assigned to: {req.assignedTo.name}</p>
-          )}
-
-          {req.closedAt && (
-            <p>
-              Closed: {new Date(req.closedAt).toLocaleString()}
-            </p>
-          )}
-=======
     <div className="page">
       <div className="page__header">
         <div>
           <h2>Student Dashboard</h2>
           <p className="muted">Create and track your service requests.</p>
->>>>>>> 0ef72d2c0b21a2facd061fb285389aa5fbce0281
         </div>
         <button className="button button--ghost" onClick={logout}>Logout</button>
       </div>

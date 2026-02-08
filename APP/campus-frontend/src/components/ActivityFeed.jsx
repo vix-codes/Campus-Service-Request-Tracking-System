@@ -22,15 +22,9 @@ function ActivityFeed() {
 
   if (role !== "admin") {
     return (
-<<<<<<< HEAD
-      <div style={{ marginTop: 40 }}>
-        <h3>System Activity Timeline</h3>
-        <p>Activity logs are available to admins only.</p>
-=======
       <div className="section">
         <h3>System Activity Timeline</h3>
         <p className="muted">Activity logs are available to admins only.</p>
->>>>>>> 0ef72d2c0b21a2facd061fb285389aa5fbce0281
       </div>
     );
   }

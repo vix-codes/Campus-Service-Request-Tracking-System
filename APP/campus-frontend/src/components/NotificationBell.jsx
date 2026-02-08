@@ -45,16 +45,6 @@ function NotificationBell(){
           <div className="notification__title">Notifications</div>
           {notifications.length===0 && <div className="notification__empty">No notifications</div>}
           {notifications.map(n=> (
-<<<<<<< HEAD
-            <div key={n._id} style={{padding:10,borderBottom:'1px solid #f1f1f1',background:n.isRead? 'white':'#f7fbff'}}>
-              <div style={{display:'flex',justifyContent:'space-between'}}>
-                <div style={{fontWeight:700}}>{n.type?.toUpperCase() || 'INFO'}</div>
-                <div style={{fontSize:12,color:'#999'}}>{new Date(n.createdAt).toLocaleString()}</div>
-              </div>
-              <div style={{marginTop:6,fontSize:14}}>{n.message}</div>
-              <div style={{marginTop:8}}>
-                {!n.isRead && <button onClick={()=>markRead(n._id)} style={{padding:'6px 10px',background:'#0066cc',color:'white',border:'none',borderRadius:4,cursor:'pointer'}}>Mark read</button>}
-=======
             <div key={n._id} className={`notification__item ${n.isRead ? "" : "notification__item--unread"}`}>
               <div className="notification__item-header">
                 <div className="notification__type">{n.type?.toUpperCase() || 'INFO'}</div>
@@ -70,7 +60,6 @@ function NotificationBell(){
                     Mark read
                   </button>
                 )}
->>>>>>> 0ef72d2c0b21a2facd061fb285389aa5fbce0281
               </div>
             </div>
           ))}

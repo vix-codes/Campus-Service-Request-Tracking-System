@@ -16,24 +16,12 @@ function Login() {
         password,
       });
 
-<<<<<<< HEAD
       const { token, role, name, userId } = res.data;
 
       localStorage.setItem("token", token);
       localStorage.setItem("role", role ?? "student");
       if (name) localStorage.setItem("userName", name);
       if (userId) localStorage.setItem("userId", userId);
-=======
-      const token = res.data.token;
-      const role = res.data.user?.role;
-      const userId = res.data.user?.id;
-
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
-      if (userId) {
-        localStorage.setItem("userId", userId);
-      }
->>>>>>> 0ef72d2c0b21a2facd061fb285389aa5fbce0281
 
       setNotice({ tone: "success", message: "Login successful. Redirecting..." });
       setTimeout(() => window.location.reload(), 600);
