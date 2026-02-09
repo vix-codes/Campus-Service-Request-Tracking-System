@@ -19,7 +19,7 @@ function Login() {
       const { token, role, name, userId } = res.data;
 
       localStorage.setItem("token", token);
-      localStorage.setItem("role", role ?? "student");
+      localStorage.setItem("role", role ?? "tenant");
       if (name) localStorage.setItem("userName", name);
       if (userId) localStorage.setItem("userId", userId);
 
@@ -34,7 +34,7 @@ function Login() {
   return (
     <div className="page page--center">
       <div className="card card--narrow">
-        <h2>Campus Service Login</h2>
+        <h2>Apartment Service Login</h2>
         <p className="muted">Use your campus email to sign in.</p>
         <NoticeBanner
           message={notice?.message}

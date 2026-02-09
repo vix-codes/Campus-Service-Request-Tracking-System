@@ -188,7 +188,8 @@ textarea {
   text-transform: capitalize;
 }
 
-.status--open {
+.status--open,
+.status--new {
   background: rgba(45, 108, 223, 0.2);
   color: #2d6cdf;
 }
@@ -199,7 +200,8 @@ textarea {
   color: #2d6cdf;
 }
 
-.status--closed {
+.status--closed,
+.status--completed {
   background: rgba(31, 143, 78, 0.2);
   color: #1f8f4e;
 }

@@ -6,7 +6,7 @@ function ActivityFeed() {
   const role = localStorage.getItem("role");
 
   useEffect(() => {
-    if (role === "admin") {
+    if (role === "admin" || role === "manager") {
       fetchLogs();
     }
   }, [role]);
@@ -20,13 +20,8 @@ function ActivityFeed() {
     }
   };
 
-  if (role !== "admin") {
-    return (
-      <div className="section">
-        <h3>System Activity Timeline</h3>
-        <p className="muted">Activity logs are available to admins only.</p>
-      </div>
-    );
+  if (role !== "admin" && role !== "manager") {
+    return null;
   }
 
   return (

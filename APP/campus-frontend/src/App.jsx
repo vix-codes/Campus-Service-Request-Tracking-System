@@ -12,11 +12,11 @@ function App() {
     return <Login />;
   }
 
-  if (role === "admin") {
+  if (role === "admin" || role === "manager") {
     return (
       <>
         <div className="topbar">
-          <div className="topbar__brand">Campus Service</div>
+          <div className="topbar__brand">Apartment Service</div>
           <NotificationBell />
         </div>
         <AdminDashboard />
@@ -24,11 +24,11 @@ function App() {
     );
   }
 
-  if (role === "staff") {
+  if (role === "technician") {
     return (
       <>
         <div className="topbar">
-          <div className="topbar__brand">Campus Service</div>
+          <div className="topbar__brand">Apartment Service</div>
           <NotificationBell />
         </div>
         <StaffDashboard />
@@ -39,7 +39,7 @@ function App() {
   return (
     <>
       <div className="topbar">
-        <div className="topbar__brand">Campus Service</div>
+        <div className="topbar__brand">Apartment Service</div>
         <NotificationBell />
       </div>
       <StudentDashboard />

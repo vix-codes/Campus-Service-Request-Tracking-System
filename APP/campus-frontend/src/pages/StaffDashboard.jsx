@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
-import ActivityFeed from "../components/ActivityFeed";
 import NoticeBanner from "../components/NoticeBanner";
 
 function StaffDashboard() {
@@ -12,21 +11,10 @@ function StaffDashboard() {
     fetchRequests();
   }, []);
 
-  const userId = localStorage.getItem("userId");
-
   const fetchRequests = async () => {
     try {
       const res = await API.get("/requests");
-      const allRequests = res.data.data || [];
-      // Staff only see requests assigned to them
-      const myRequests = userId
-        ? allRequests.filter(
-            (r) =>
-              r.assignedTo &&
-              String(r.assignedTo._id ?? r.assignedTo) === String(userId)
-          )
-        : allRequests.filter((r) => r.assignedTo);
-      setRequests(myRequests);
+      setRequests(res.data.data || []);
     } catch (err) {
       console.log(err);
     }
@@ -35,7 +23,7 @@ function StaffDashboard() {
   const startWork = async (id) => {
     try {
       await API.put(`/requests/status/${id}`, {
-        status: "In Progress",
+        status: "IN_PROGRESS",
       });
 
       setNotice({ tone: "success", message: "Marked as in progress." });
@@ -45,13 +33,13 @@ function StaffDashboard() {
     }
   };
 
-  const closeTask = async (id) => {
+  const completeTask = async (id) => {
     try {
       await API.put(`/requests/status/${id}`, {
-        status: "Closed",
+        status: "COMPLETED",
       });
 
-      setNotice({ tone: "success", message: "Request closed." });
+      setNotice({ tone: "success", message: "Marked as completed." });
       fetchRequests();
     } catch {
       setNotice({ tone: "error", message: "Unable to update status." });
@@ -66,12 +54,12 @@ function StaffDashboard() {
 
     try {
       await API.put(`/requests/status/${id}`, {
-        status: "Rejected",
+        status: "REJECTED",
         reason: reason,
       });
 
       setReason("");
-      setNotice({ tone: "success", message: "Request rejected." });
+      setNotice({ tone: "success", message: "Complaint rejected." });
       fetchRequests();
     } catch {
       setNotice({ tone: "error", message: "Unable to reject request." });
@@ -87,8 +75,8 @@ function StaffDashboard() {
     <div className="page">
       <div className="page__header">
         <div>
-          <h2>Staff Dashboard</h2>
-          <p className="muted">Track and resolve assigned requests.</p>
+          <h2>Technician Dashboard</h2>
+          <p className="muted">Track and resolve assigned complaints.</p>
         </div>
         <button className="button button--ghost" onClick={logout}>Logout</button>
       </div>
@@ -100,68 +88,70 @@ function StaffDashboard() {
       />
 
       <div className="grid">
-        {requests
-          .filter(r => r.assignedTo)
-          .map((req) => (
-            <div
-              key={req._id}
-              className="card"
-            >
-              <div className="card__header">
-                <div>
-                  <h4>{req.title}</h4>
-                  <p className="muted">{req.description}</p>
-                </div>
-                <span className={`status status--${req.status?.toLowerCase().replace(" ", "-")}`}>
-                  {req.status}
-                </span>
+        {requests.map((req) => (
+          <div
+            key={req._id}
+            className="card"
+          >
+            <div className="card__header">
+              <div>
+                <h4>{req.title}</h4>
+                <p className="muted">{req.description}</p>
               </div>
-
-              {req.image && <img className="card__image" src={req.image} alt={`${req.title} evidence`} />}
-
-              <div className="card__meta">
-                {req.createdAt && (
-                  <p>Created: {new Date(req.createdAt).toLocaleString()}</p>
-                )}
-
-                {req.assignedAt && (
-                  <p>Assigned: {new Date(req.assignedAt).toLocaleString()}</p>
-                )}
-              </div>
-
-              <div className="card__actions">
-                {req.status === "Assigned" && (
-                  <button className="button button--primary" onClick={() => startWork(req._id)}>
-                    Start Work
-                  </button>
-                )}
-
-                {req.status === "In Progress" && (
-                  <>
-                    <button className="button button--success" onClick={() => closeTask(req._id)}>
-                      Close
-                    </button>
-
-                    <input
-                      className="input"
-                      placeholder="Reject reason"
-                      value={reason}
-                      onChange={(e)=>setReason(e.target.value)}
-                    />
-
-                    <button className="button button--danger" onClick={() => rejectTask(req._id)}>
-                      Reject
-                    </button>
-                  </>
-                )}
-
-                {req.status === "Closed" && <span className="status status--closed">Closed ✔</span>}
-              </div>
+              <span className={`status status--${req.status?.toLowerCase().replaceAll("_", "-")}`}>
+                {req.status?.replaceAll("_", " ")}
+              </span>
             </div>
-          ))}
-      </div>
 
-      <ActivityFeed />
+            {req.image && <img className="card__image" src={req.image} alt={`${req.title} evidence`} />}
+
+            <div className="card__meta">
+              {req.token && (
+                <p>Token: {req.token}</p>
+              )}
+              {req.priority && (
+                <p>Priority: {req.priority}</p>
+              )}
+              {req.createdAt && (
+                <p>Created: {new Date(req.createdAt).toLocaleString()}</p>
+              )}
+
+              {req.assignedAt && (
+                <p>Assigned: {new Date(req.assignedAt).toLocaleString()}</p>
+              )}
+            </div>
+
+            <div className="card__actions">
+              {req.status === "ASSIGNED" && (
+                <button className="button button--primary" onClick={() => startWork(req._id)}>
+                  Start Work
+                </button>
+              )}
+
+              {req.status === "IN_PROGRESS" && (
+                <>
+                  <button className="button button--success" onClick={() => completeTask(req._id)}>
+                    Complete
+                  </button>
+
+                  <input
+                    className="input"
+                    placeholder="Reject reason"
+                    value={reason}
+                    onChange={(e)=>setReason(e.target.value)}
+                  />
+
+                  <button className="button button--danger" onClick={() => rejectTask(req._id)}>
+                    Reject
+                  </button>
+                </>
+              )}
+
+              {req.status === "COMPLETED" && <span className="status status--closed">Completed *</span>}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,29 +1,33 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
-function NotificationBell(){
-  const [notifications,setNotifications] = useState([]);
-  const [open,setOpen] = useState(false);
+function NotificationBell() {
+  const [notifications, setNotifications] = useState([]);
+  const [open, setOpen] = useState(false);
 
-  const fetch = async ()=>{
-    try{
-      const res = await API.get('/notifications');
+  const fetchNotifications = async () => {
+    try {
+      const res = await API.get("/notifications");
       setNotifications(res.data.data || []);
-    }catch(err){
-      console.error('fetch notifications', err);
+    } catch (err) {
+      console.error("fetch notifications", err);
     }
   };
 
-  useEffect(()=>{ fetch(); },[]);
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  const markRead = async (id)=>{
-    try{
+  const markRead = async (id) => {
+    try {
       await API.put(`/notifications/${id}/read`);
-      setNotifications(notifications.map(n=> n._id===id?{...n,isRead:true}:n));
-    }catch(err){
-      console.error('mark read', err);
+      setNotifications(
+        notifications.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+      );
+    } catch (err) {
+      console.error("mark read", err);
     }
   };
 
@@ -31,11 +35,14 @@ function NotificationBell(){
     <div className="notification">
       <button
         className="notification__button"
-        onClick={()=>{setOpen(!open); if(!open) fetch();}}
+        onClick={() => {
+          setOpen(!open);
+          if (!open) fetchNotifications();
+        }}
         type="button"
       >
-        <span aria-hidden>🔔</span>
-        {unreadCount>0 && (
+        <span aria-hidden>Alerts</span>
+        {unreadCount > 0 && (
           <span className="notification__badge">{unreadCount}</span>
         )}
       </button>
@@ -43,19 +50,30 @@ function NotificationBell(){
       {open && (
         <div className="notification__panel">
           <div className="notification__title">Notifications</div>
-          {notifications.length===0 && <div className="notification__empty">No notifications</div>}
-          {notifications.map(n=> (
-            <div key={n._id} className={`notification__item ${n.isRead ? "" : "notification__item--unread"}`}>
+          {notifications.length === 0 && (
+            <div className="notification__empty">No notifications</div>
+          )}
+          {notifications.map((n) => (
+            <div
+              key={n._id}
+              className={`notification__item ${
+                n.isRead ? "" : "notification__item--unread"
+              }`}
+            >
               <div className="notification__item-header">
-                <div className="notification__type">{n.type?.toUpperCase() || 'INFO'}</div>
-                <div className="notification__time">{new Date(n.createdAt).toLocaleString()}</div>
+                <div className="notification__type">
+                  {n.type?.toUpperCase() || "INFO"}
+                </div>
+                <div className="notification__time">
+                  {new Date(n.createdAt).toLocaleString()}
+                </div>
               </div>
               <div className="notification__message">{n.message}</div>
               <div className="notification__actions">
                 {!n.isRead && (
                   <button
                     className="button button--primary button--small"
-                    onClick={()=>markRead(n._id)}
+                    onClick={() => markRead(n._id)}
                   >
                     Mark read
                   </button>

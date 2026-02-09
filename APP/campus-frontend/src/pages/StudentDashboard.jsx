@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
-import ActivityFeed from "../components/ActivityFeed";
 import NoticeBanner from "../components/NoticeBanner";
 
 function StudentDashboard() {
@@ -33,13 +32,25 @@ function StudentDashboard() {
         image,
       });
 
-      setNotice({ tone: "success", message: "Request created successfully." });
+      setNotice({ tone: "success", message: "Complaint created successfully." });
       setTitle("");
       setDescription("");
       setImage("");
       fetchRequests();
     } catch {
-      setNotice({ tone: "error", message: "Error creating request." });
+      setNotice({ tone: "error", message: "Error creating complaint." });
+    }
+  };
+
+  const reopenComplaint = async (id) => {
+    try {
+      await API.put(`/requests/status/${id}`, {
+        status: "NEW",
+      });
+      setNotice({ tone: "success", message: "Complaint reopened." });
+      fetchRequests();
+    } catch {
+      setNotice({ tone: "error", message: "Unable to reopen complaint." });
     }
   };
 
@@ -52,8 +63,8 @@ function StudentDashboard() {
     <div className="page">
       <div className="page__header">
         <div>
-          <h2>Student Dashboard</h2>
-          <p className="muted">Create and track your service requests.</p>
+          <h2>Tenant Dashboard</h2>
+          <p className="muted">Create and track your complaints.</p>
         </div>
         <button className="button button--ghost" onClick={logout}>Logout</button>
       </div>
@@ -65,7 +76,7 @@ function StudentDashboard() {
       />
 
       <div className="card">
-        <h3>Create Request</h3>
+        <h3>Create Complaint</h3>
 
         <form onSubmit={createRequest} className="form">
           <label className="form__label">
@@ -104,7 +115,7 @@ function StudentDashboard() {
       </div>
 
       <div className="section">
-        <h3>All Requests</h3>
+        <h3>All Complaints</h3>
 
         <div className="grid">
           {requests.map((req) => (
@@ -117,14 +128,20 @@ function StudentDashboard() {
                   <h4>{req.title}</h4>
                   <p className="muted">{req.description}</p>
                 </div>
-                <span className={`status status--${req.status?.toLowerCase().replace(" ", "-")}`}>
-                  {req.status}
+                <span className={`status status--${req.status?.toLowerCase().replaceAll("_", "-")}`}>
+                  {req.status?.replaceAll("_", " ")}
                 </span>
               </div>
 
               {req.image && <img className="card__image" src={req.image} alt={`${req.title} evidence`} />}
 
               <div className="card__meta">
+                {req.token && (
+                  <p>Token: {req.token}</p>
+                )}
+                {req.priority && (
+                  <p>Priority: {req.priority}</p>
+                )}
                 {req.createdAt && (
                   <p>
                     Created: {new Date(req.createdAt).toLocaleString()}
@@ -135,18 +152,28 @@ function StudentDashboard() {
                   <p>Assigned to: {req.assignedTo.name}</p>
                 )}
 
+                {req.rejectReason && (
+                  <p>Rejection: {req.rejectReason}</p>
+                )}
+
                 {req.closedAt && (
                   <p>
                     Closed: {new Date(req.closedAt).toLocaleString()}
                   </p>
                 )}
               </div>
+
+              {req.status === "REJECTED" && (
+                <div className="card__actions">
+                  <button className="button button--ghost" onClick={() => reopenComplaint(req._id)}>
+                    Reopen Complaint
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
       </div>
-
-      <ActivityFeed />
     </div>
   );
 }
