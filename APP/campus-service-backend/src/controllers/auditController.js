@@ -4,9 +4,9 @@ const Request = require("../models/Request");
 // 🔵 GET ALL ACTION LOGS (admin only)
 const getActionLogs = async (req, res) => {
   try {
-    // RBAC: Only admins can view action logs
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin only" });
+    // RBAC: admin/manager can view action logs
+    if (!["admin", "manager"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Admin/Manager only" });
     }
 
     const logs = await ActionLog.find()
@@ -23,8 +23,8 @@ const getActionLogs = async (req, res) => {
 // 🔵 GET LOGS BY USER (admin only)
 const getLogsByUser = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin only" });
+    if (!["admin", "manager"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Admin/Manager only" });
     }
 
     const { userId } = req.params;
@@ -42,8 +42,8 @@ const getLogsByUser = async (req, res) => {
 // 🔵 GET LOGS BY ACTION TYPE (admin only)
 const getLogsByAction = async (req, res) => {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ message: "Admin only" });
+    if (!["admin", "manager"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Admin/Manager only" });
     }
 
     const { action } = req.params;
@@ -67,7 +67,7 @@ const getLogsByRequest = async (req, res) => {
     if (!request) return res.status(404).json({ message: "Request not found" });
 
     // RBAC: admin can view any; tenant can view if createdBy; technician can view if assignedTo
-    if (req.user.role !== "admin") {
+    if (!["admin", "manager"].includes(req.user.role)) {
       const isOwner = request.createdBy?.toString() === req.user.id;
       const isAssigned = request.assignedTo?.toString() === req.user.id;
       if (!isOwner && !isAssigned) {

@@ -5,6 +5,7 @@ const requestRoutes = require("./routes/requestRoutes");
 const authRoutes = require("./routes/authRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const errorHandler = require("./middlewares/errorHandler");
 const requestLogger = require("./middlewares/requestLogger");
@@ -48,6 +49,7 @@ app.use("/auth", authRoutes);
 app.use("/requests", requestRoutes);
 app.use("/audit", auditRoutes);
 app.use("/notifications", notificationRoutes);
+app.use("/api/admin", adminRoutes);
 
 
 // 🟢 ERROR HANDLER (last)

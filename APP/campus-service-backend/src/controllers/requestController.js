@@ -337,10 +337,16 @@ exports.updateStatus = async (req, res) => {
         relatedToken: request.token,
       });
     } else if (status === "NEW") {
-      if (!["manager", "admin"].includes(role)) {
-        return res.status(403).json({ message: "Manager/Admin only" });
+      const isManagerOrAdmin = ["manager", "admin"].includes(role);
+      const isTenantOwner =
+        role === "tenant" && request.createdBy?.toString() === userId;
+      if (!isManagerOrAdmin && !isTenantOwner) {
+        return res.status(403).json({ message: "Not allowed" });
       }
-      if (!["REJECTED", "CLOSED"].includes(request.status)) {
+      if (isTenantOwner && request.status !== "REJECTED") {
+        return res.status(400).json({ message: "Invalid status transition" });
+      }
+      if (isManagerOrAdmin && !["REJECTED", "CLOSED"].includes(request.status)) {
         return res.status(400).json({ message: "Invalid status transition" });
       }
       request.status = "NEW";
