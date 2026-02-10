@@ -26,16 +26,29 @@ function Login() {
       setNotice({ tone: "success", message: "Login successful. Redirecting..." });
       setTimeout(() => window.location.reload(), 600);
     } catch (err) {
+      const status = err?.response?.status;
+      const responseMsg = err?.response?.data?.message;
+      const axiosMsg = err?.message;
+      const method = err?.config?.method?.toUpperCase?.() || err?.config?.method;
+      const baseURL = err?.config?.baseURL || "";
+      const url = err?.config?.url || "";
+      const requestUrl = `${baseURL}${url}`;
+
       const msg =
-        err?.response?.data?.message ||
-        err?.message ||
+        responseMsg ||
+        (status ? `Request failed (${status})` : null) ||
+        axiosMsg ||
         "Login failed. Check your credentials.";
+
+      const debugSuffix =
+        method && requestUrl ? ` (${method} ${requestUrl})` : requestUrl ? ` (${requestUrl})` : "";
       console.log("Login error:", {
         status: err?.response?.status,
         data: err?.response?.data,
         message: err?.message,
+        requestUrl,
       });
-      setNotice({ tone: "error", message: msg });
+      setNotice({ tone: "error", message: `${msg}${debugSuffix}` });
     }
   };
 
