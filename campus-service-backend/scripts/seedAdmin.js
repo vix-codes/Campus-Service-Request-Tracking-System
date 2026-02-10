@@ -5,14 +5,20 @@ const bcrypt = require("bcryptjs");
 
 const User = require("../src/models/User");
 
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI =
+  process.env.MONGO_URI ||
+  process.env.MONGODB_URI ||
+  process.env.MONGO_URL ||
+  process.env.DATABASE_URL;
 const adminEmail = process.env.ADMIN_EMAIL || "admin@gmail.com";
 const adminPassword = process.env.ADMIN_PASSWORD || "123456";
 const adminName = process.env.ADMIN_NAME || "Main Admin";
 
 async function run() {
   if (!MONGO_URI) {
-    console.error("Missing MONGO_URI in environment.");
+    console.error(
+      "Missing Mongo connection string. Set one of: MONGO_URI, MONGODB_URI, MONGO_URL, DATABASE_URL"
+    );
     process.exit(1);
   }
 

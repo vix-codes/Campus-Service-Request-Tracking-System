@@ -6,7 +6,11 @@ const Complaint = require("../src/models/Complaint");
 const Notification = require("../src/models/Notification");
 const ActionLog = require("../src/models/ActionLog");
 
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI =
+  process.env.MONGO_URI ||
+  process.env.MONGODB_URI ||
+  process.env.MONGO_URL ||
+  process.env.DATABASE_URL;
 
 const ROLE_MAP = {
   student: "tenant",
@@ -61,7 +65,9 @@ const assignTokens = async (requests) => {
 
 const run = async () => {
   if (!MONGO_URI) {
-    console.error("Missing MONGO_URI in environment.");
+    console.error(
+      "Missing Mongo connection string. Set one of: MONGO_URI, MONGODB_URI, MONGO_URL, DATABASE_URL"
+    );
     process.exit(1);
   }
 
