@@ -1,9 +1,12 @@
+/* Import the design tokens */
+@import url('./styles/theme.css');
+
 :root {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-family);
   line-height: 1.5;
-  font-weight: 400;
-  color: #f5f3ee;
-  background-color: #0f1a24;
+  font-weight: var(--font-weight-regular);
+  color: var(--primary-text);
+  background-color: var(--primary-bg);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -19,8 +22,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #0f1a24;
-  color: #f5f3ee;
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
 }
 
 img {

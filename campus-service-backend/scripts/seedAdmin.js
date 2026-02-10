@@ -1,53 +1,47 @@
-require("dotenv").config();
 
-const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-
 const User = require("../src/models/User");
 
-const MONGO_URI =
-  process.env.MONGO_URI ||
-  process.env.MONGODB_URI ||
-  process.env.MONGO_URL ||
-  process.env.DATABASE_URL;
-const adminEmail = process.env.ADMIN_EMAIL || "admin@gmail.com";
-const adminPassword = process.env.ADMIN_PASSWORD || "123456";
-const adminName = process.env.ADMIN_NAME || "Main Admin";
+const seedAdmin = async () => {
+  if (String(process.env.SEED_ADMIN || "").toLowerCase() !== "true") return;
 
-async function run() {
-  if (!MONGO_URI) {
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+  const name = process.env.ADMIN_NAME || "Admin";
+
+  if (!email || !password) {
     console.error(
-      "Missing Mongo connection string. Set one of: MONGO_URI, MONGODB_URI, MONGO_URL, DATABASE_URL"
+      "SEED_ADMIN=true but missing ADMIN_EMAIL/ADMIN_PASSWORD. Skipping admin bootstrap."
     );
-    process.exit(1);
+    return;
   }
 
-  await mongoose.connect(MONGO_URI);
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    const existing = await User.findOne({ email });
 
-  const hash = await bcrypt.hash(adminPassword, 10);
+    if (existing) {
+      existing.password = hash;
+      existing.role = "admin";
+      existing.isActive = true;
+      if (!existing.name) existing.name = name;
+      await existing.save();
+      console.log(`Bootstrapped admin (updated): ${email}`);
+      return;
+    }
 
-  const existing = await User.findOne({ email: adminEmail });
-  if (existing) {
-    existing.password = hash;
-    existing.role = "admin";
-    if (!existing.name) existing.name = adminName;
-    await existing.save();
-    console.log(`Updated admin: ${adminEmail}`);
-  } else {
     await User.create({
-      name: adminName,
-      email: adminEmail,
+      name,
+      email,
       password: hash,
       role: "admin",
       isActive: true,
     });
-    console.log(`Created admin: ${adminEmail}`);
+
+    console.log(`Bootstrapped admin (created): ${email}`);
+  } catch (error) {
+    console.error("Admin bootstrap failed:", error?.message || error);
   }
+};
 
-  await mongoose.disconnect();
-}
-
-run().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+module.exports = seedAdmin;

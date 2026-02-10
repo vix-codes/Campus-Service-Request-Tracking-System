@@ -1,0 +1,26 @@
+
+:root {
+  --primary-bg: #0f1a24;
+  --primary-text: #f5f3ee;
+  --primary-accent: #2d6cdf;
+  --primary-accent-light: rgba(45, 108, 223, 0.2);
+  --primary-accent-border: rgba(45, 108, 223, 0.4);
+
+  --secondary-bg: #1a1a1a;
+  --secondary-text: #f5f3ee;
+
+  --border-color: rgba(245, 243, 238, 0.2);
+  --border-radius: 10px;
+
+  --font-family: "Inter", system-ui, -apple-system, sans-serif;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 600;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+}

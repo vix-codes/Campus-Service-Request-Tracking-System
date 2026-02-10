@@ -1,52 +1,36 @@
+
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import ActivityFeed from "../components/ActivityFeed";
 import NoticeBanner from "../components/NoticeBanner";
 
-function AdminDashboard() {
-  const role = localStorage.getItem("role");
-  const [complaints, setComplaints] = useState([]);
-  const [technicians, setTechnicians] = useState([]);
-  const [selectedTechnicianByComplaintId, setSelectedTechnicianByComplaintId] = useState({});
-  const [notice, setNotice] = useState(null);
-  const [showCreateUser, setShowCreateUser] = useState(false);
-  const [showActivity, setShowActivity] = useState(false);
-  const [analytics, setAnalytics] = useState(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+// A reusable hook for fetching data
+const useFetch = (url) => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [name,setName]=useState("");
-  const [email,setEmail]=useState("");
-  const [password,setPassword]=useState("");
-  const [newUserRole,setNewUserRole]=useState("tenant");
-
-  useEffect(() => {
-    fetchComplaints();
-    fetchTechnicians();
-    fetchAnalytics();
-  }, []);
-
-  const fetchComplaints = async () => {
-    const res = await API.get("/complaints");
-    setComplaints(res.data.data);
-  };
-
-  const fetchTechnicians = async () => {
-    const res = await API.get("/auth/technicians");
-    setTechnicians(res.data.data);
-  };
-
-  const fetchAnalytics = async () => {
+  const fetchData = async () => {
     try {
-      setAnalyticsLoading(true);
-      const res = await API.get("/api/admin/analytics");
-      setAnalytics(res.data.data);
+      setLoading(true);
+      const res = await API.get(url);
+      setData(res.data.data);
     } catch (err) {
-      console.log(err);
+      setError(err);
     } finally {
-      setAnalyticsLoading(false);
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, [url]);
+
+  return { data, loading, error, refetch: fetchData };
+};
+
+// A component for the analytics section
+const Analytics = ({ role, analytics, loading, onRefresh }) => {
   const formatDuration = (ms) => {
     if (!ms || ms <= 0) return "0h 0m";
     const totalMinutes = Math.round(ms / 60000);
@@ -55,86 +39,267 @@ function AdminDashboard() {
     return `${hours}h ${minutes}m`;
   };
 
-  const assign = async (id) => {
-    const technicianId = selectedTechnicianByComplaintId[id];
-    if (!technicianId) {
-      setNotice({ tone: "error", message: "Select a technician to assign." });
-      return;
-    }
+  return (
+    <div className="section">
+      <div className="card">
+        <div className="card__header">
+          <div>
+            <h3>System Analytics</h3>
+            <p className="muted">Live performance snapshot.</p>
+          </div>
+          <button className="button button--ghost" type="button" onClick={onRefresh}>
+            Refresh
+          </button>
+        </div>
 
-    try {
-      await API.put(`/complaints/assign/${id}`, {
-        technicianId,
-      });
-      setNotice({ tone: "success", message: "Complaint assigned successfully." });
-    } catch (err) {
-      console.log(err);
-      setNotice({ tone: "error", message: "Unable to assign complaint." });
-    }
+        {loading && <p className="muted">Loading analytics...</p>}
 
-    setSelectedTechnicianByComplaintId((prev) => ({ ...prev, [id]: "" }));
-    fetchComplaints();
-  };
+        {!loading && analytics && (
+          <>
+            <div className="grid">
+              <div className="card">
+                <h4>Overview</h4>
+                <p>Total: {analytics.overview.totalComplaints}</p>
+                <p>New: {analytics.overview.open}</p>
+                <p>Assigned: {analytics.overview.assigned}</p>
+                <p>In Progress: {analytics.overview.inProgress}</p>
+              </div>
 
-  const deleteComplaint = async (id) => {
-    try {
-      await API.delete(`/complaints/${id}`);
-      setNotice({ tone: "success", message: "Complaint deleted." });
-      fetchComplaints();
-    } catch (err) {
-      console.log(err);
-      setNotice({ tone: "error", message: "Unable to delete complaint." });
-    }
-  };
+              <div className="card">
+                <h4>Performance</h4>
+                <p>Avg resolution: {formatDuration(analytics.time.avgResolutionMs)}</p>
+                <p>Today created: {analytics.time.todayCreated}</p>
+                <p>Today closed: {analytics.time.todayClosed}</p>
+              </div>
 
-  const closeComplaint = async (id) => {
-    try {
-      await API.put(`/complaints/status/${id}`, {
-        status: "CLOSED",
-      });
-      setNotice({ tone: "success", message: "Complaint closed." });
-      fetchComplaints();
-    } catch (err) {
-      console.log(err);
-      setNotice({ tone: "error", message: "Unable to close complaint." });
-    }
-  };
+              <div className="card">
+                <h4>Technicians</h4>
+                <p>Total: {analytics.technicians.total}</p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
-  const reopenComplaint = async (id) => {
-    try {
-      await API.put(`/complaints/status/${id}`, {
-        status: "NEW",
-      });
-      setNotice({ tone: "success", message: "Complaint reopened." });
-      fetchComplaints();
-    } catch (err) {
-      console.log(err);
-      setNotice({ tone: "error", message: "Unable to reopen complaint." });
-    }
-  };
+// A component for creating a new user
+const CreateUserForm = ({ onUserCreated, setNotice }) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("tenant");
 
-  const createUser = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      await API.post("/auth/create-user", {
-        name,
-        email,
-        password,
-        role: newUserRole,
-      });
-
+      await API.post("/auth/create-user", { name, email, password, role });
       setNotice({ tone: "success", message: "User created successfully." });
-      setName(""); setEmail(""); setPassword("");
-      fetchTechnicians();
+      setName("");
+      setEmail("");
+      setPassword("");
+      onUserCreated();
     } catch {
       setNotice({ tone: "error", message: "Error creating user." });
     }
   };
 
-  const logout = () => {
-    localStorage.clear();
-    window.location.reload();
+  return (
+    <form onSubmit={handleSubmit} className="form form--grid">
+      <label className="form__label">
+        Name
+        <input
+          placeholder="Full name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </label>
+      <label className="form__label">
+        Email
+        <input
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+      </label>
+      <label className="form__label">
+        Password
+        <input
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+      </label>
+      <label className="form__label">
+        Role
+        <select value={role} onChange={(e) => setRole(e.target.value)}>
+          <option value="tenant">Tenant</option>
+          <option value="technician">Technician</option>
+          <option value="manager">Manager</option>
+        </select>
+      </label>
+      <div className="form__actions">
+        <button className="button button--primary">Create User</button>
+      </div>
+    </form>
+  );
+};
+
+// A component to display and manage a single complaint
+const ComplaintCard = ({
+  complaint,
+  technicians,
+  onAssign,
+  onClose,
+  onReopen,
+  onDelete,
+}) => {
+  const [selectedTechnician, setSelectedTechnician] = useState("");
+
+  return (
+    <div className="card">
+      <div className="card__header">
+        <div>
+          <h4>{complaint.title}</h4>
+          <p className="muted">{complaint.description}</p>
+        </div>
+        <span className={`status status--${complaint.status?.toLowerCase().replaceAll("_", "-")}`}>
+          {complaint.status?.replaceAll("_", " ")}
+        </span>
+      </div>
+
+      {complaint.image && (
+        <img
+          className="card__image"
+          src={complaint.image}
+          alt={`${complaint.title} evidence`}
+        />
+      )}
+
+      <div className="card__meta">
+        {complaint.createdBy && <p>By: {complaint.createdBy.name}</p>}
+        {complaint.assignedTo && <p>Technician: {complaint.assignedTo.name}</p>}
+        {complaint.createdAt && (
+          <p>Created: {new Date(complaint.createdAt).toLocaleString()}</p>
+        )}
+      </div>
+
+      <div className="card__actions">
+        {["NEW", "REJECTED"].includes(complaint.status) && (
+          <>
+            <select
+              className="select"
+              value={selectedTechnician}
+              onChange={(e) => setSelectedTechnician(e.target.value)}
+            >
+              <option value="" disabled>
+                Select technician
+              </option>
+              {technicians.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <button
+              className="button button--primary"
+              onClick={() => onAssign(complaint._id, selectedTechnician)}
+            >
+              Assign
+            </button>
+          </>
+        )}
+        {complaint.status === "COMPLETED" && (
+          <button
+            className="button button--success"
+            onClick={() => onClose(complaint._id)}
+          >
+            Close
+          </button>
+        )}
+        {complaint.status === "CLOSED" && (
+          <button
+            className="button button--ghost"
+            onClick={() => onReopen(complaint._id)}
+          >
+            Reopen
+          </button>
+        )}
+        <button
+          className="button button--danger"
+          onClick={() => onDelete(complaint._id)}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+};
+
+function AdminDashboard() {
+  const role = localStorage.getItem("role");
+  const [notice, setNotice] = useState(null);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
+
+  const { data: complaints, refetch: fetchComplaints } = useFetch("/complaints");
+  const { data: technicians, refetch: fetchTechnicians } = useFetch("/auth/technicians");
+  const {
+    data: analytics,
+    loading: analyticsLoading,
+    refetch: fetchAnalytics,
+  } = useFetch("/api/admin/analytics");
+
+  const handleApiCall = async (apiCall, successMessage, errorMessage) => {
+    try {
+      await apiCall();
+      setNotice({ tone: "success", message: successMessage });
+      fetchComplaints();
+    } catch (err) {
+      console.log(err);
+      setNotice({ tone: "error", message: errorMessage });
+    }
+  };
+
+  const assignComplaint = (id, technicianId) => {
+    if (!technicianId) {
+      setNotice({ tone: "error", message: "Select a technician to assign." });
+      return;
+    }
+    handleApiCall(
+      () => API.put(`/complaints/assign/${id}`, { technicianId }),
+      "Complaint assigned successfully.",
+      "Unable to assign complaint."
+    );
+  };
+
+  const deleteComplaint = (id) => {
+    handleApiCall(
+      () => API.delete(`/complaints/${id}`),
+      "Complaint deleted.",
+      "Unable to delete complaint."
+    );
+  };
+
+  const closeComplaint = (id) => {
+    handleApiCall(
+      () => API.put(`/complaints/status/${id}`, { status: "CLOSED" }),
+      "Complaint closed.",
+      "Unable to close complaint."
+    );
+  };
+
+  const reopenComplaint = (id) => {
+    handleApiCall(
+      () => API.put(`/complaints/status/${id}`, { status: "NEW" }),
+      "Complaint reopened.",
+      "Unable to reopen complaint."
+    );
   };
 
   return (
@@ -144,7 +309,6 @@ function AdminDashboard() {
           <h2>{role === "manager" ? "Manager Dashboard" : "Admin Dashboard"}</h2>
           <p className="muted">Manage complaints and assignments.</p>
         </div>
-        <button className="button button--ghost" onClick={logout}>Logout</button>
       </div>
 
       <NoticeBanner
@@ -153,92 +317,15 @@ function AdminDashboard() {
         onClose={() => setNotice(null)}
       />
 
-      {/* ANALYTICS */}
       {(role === "admin" || role === "manager") && (
-        <div className="section">
-          <div className="card">
-            <div className="card__header">
-              <div>
-                <h3>System Analytics</h3>
-                <p className="muted">Live performance snapshot.</p>
-              </div>
-              <button
-                className="button button--ghost"
-                type="button"
-                onClick={fetchAnalytics}
-              >
-                Refresh
-              </button>
-            </div>
-
-            {analyticsLoading && <p className="muted">Loading analytics...</p>}
-
-            {!analyticsLoading && analytics && (
-              <>
-                <div className="grid">
-                  <div className="card">
-                    <h4>Overview</h4>
-                    <p>Total: {analytics.overview.totalComplaints}</p>
-                    <p>New: {analytics.overview.open}</p>
-                    <p>Assigned: {analytics.overview.assigned}</p>
-                    <p>In Progress: {analytics.overview.inProgress}</p>
-                    <p>Completed: {analytics.overview.completed}</p>
-                    <p>Closed: {analytics.overview.closed}</p>
-                    <p>Rejected: {analytics.overview.rejected}</p>
-                  </div>
-
-                  <div className="card">
-                    <h4>Priority</h4>
-                    <p>Critical: {analytics.priority.critical}</p>
-                    <p>High: {analytics.priority.high}</p>
-                  </div>
-
-                  <div className="card">
-                    <h4>Time</h4>
-                    <p>Avg resolution: {formatDuration(analytics.time.avgResolutionMs)}</p>
-                    <p>Today created: {analytics.time.todayCreated}</p>
-                    <p>Today closed: {analytics.time.todayClosed}</p>
-                  </div>
-
-                  <div className="card">
-                    <h4>Technicians</h4>
-                    <p>Total: {analytics.technicians.total}</p>
-                  </div>
-                </div>
-
-                <div className="section">
-                  <h4>Technician Performance</h4>
-                  {analytics.technicians.performance.length === 0 && (
-                    <p className="muted">No completed complaints yet.</p>
-                  )}
-                  {analytics.technicians.performance.map((t) => (
-                    <div key={t.technicianId} className="card">
-                      <p>{t.name || "Unknown"}</p>
-                      <p>Completed: {t.completedCount}</p>
-                      <p>Avg completion: {formatDuration(t.avgCompletionMs)}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="section">
-                  <h4>Pending Per Technician</h4>
-                  {analytics.technicians.pending.length === 0 && (
-                    <p className="muted">No pending assignments.</p>
-                  )}
-                  {analytics.technicians.pending.map((t) => (
-                    <div key={t.technicianId} className="card">
-                      <p>{t.name || "Unknown"}</p>
-                      <p>Pending: {t.pendingCount}</p>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+        <Analytics
+          role={role}
+          analytics={analytics}
+          loading={analyticsLoading}
+          onRefresh={fetchAnalytics}
+        />
       )}
 
-      {/* CREATE USER (admin only, collapsible) */}
       {role === "admin" && (
         <div className="card">
           <div className="card__header">
@@ -251,109 +338,28 @@ function AdminDashboard() {
               {showCreateUser ? "Hide" : "Show"}
             </button>
           </div>
-
           {showCreateUser && (
-            <form onSubmit={createUser} className="form form--grid">
-              <label className="form__label">
-                Name
-                <input placeholder="Full name" value={name} onChange={e=>setName(e.target.value)} required/>
-              </label>
-
-              <label className="form__label">
-                Email
-                <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} required/>
-              </label>
-
-              <label className="form__label">
-                Password
-                <input placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} required/>
-              </label>
-
-              <label className="form__label">
-                Role
-                <select value={newUserRole} onChange={e=>setNewUserRole(e.target.value)}>
-                  <option value="tenant">Tenant</option>
-                  <option value="technician">Technician</option>
-                  <option value="manager">Manager</option>
-                </select>
-              </label>
-
-              <div className="form__actions">
-                <button className="button button--primary">Create User</button>
-              </div>
-            </form>
+            <CreateUserForm
+              onUserCreated={fetchTechnicians}
+              setNotice={setNotice}
+            />
           )}
         </div>
       )}
 
-      {/* complaints */}
       <div className="section">
         <h3>All Complaints</h3>
         <div className="grid">
-          {complaints.map((req) => (
-            <div key={req._id} className="card">
-              <div className="card__header">
-                <div>
-                  <h4>{req.title}</h4>
-                  <p className="muted">{req.description}</p>
-                </div>
-                <span className={`status status--${req.status?.toLowerCase().replaceAll("_", "-")}`}>
-                  {req.status?.replaceAll("_", " ")}
-                </span>
-              </div>
-
-              {req.image && (
-                <img className="card__image" src={req.image} alt={`${req.title} evidence`} />
-              )}
-
-              <div className="card__meta">
-                {req.token && <p>Token: {req.token}</p>}
-                {req.priority && <p>Priority: {req.priority}</p>}
-                {req.createdBy && <p>By: {req.createdBy.name}</p>}
-                {req.assignedTo && <p>Technician: {req.assignedTo.name}</p>}
-                {req.createdAt && <p>Created: {new Date(req.createdAt).toLocaleString()}</p>}
-                {req.assignedAt && <p>Assigned: {new Date(req.assignedAt).toLocaleString()}</p>}
-                {req.completedAt && <p>Completed: {new Date(req.completedAt).toLocaleString()}</p>}
-                {req.closedAt && <p>Closed: {new Date(req.closedAt).toLocaleString()}</p>}
-              </div>
-
-              <div className="card__actions">
-                {["NEW", "REJECTED"].includes(req.status) && (
-                  <>
-                    <select
-                      className="select"
-                      value={selectedTechnicianByComplaintId[req._id] || ""}
-                      onChange={(e) =>
-                        setSelectedTechnicianByComplaintId((prev) => ({
-                          ...prev,
-                          [req._id]: e.target.value,
-                        }))
-                      }
-                    >
-                      <option value="" disabled>Select technician</option>
-                      {technicians.map(s=>(
-                        <option key={s._id} value={s._id}>{s.name}</option>
-                      ))}
-                    </select>
-
-                    <button className="button button--primary" onClick={()=>assign(req._id)}>Assign</button>
-                  </>
-                )}
-                {req.status === "COMPLETED" && (
-                  <button className="button button--success" onClick={()=>closeComplaint(req._id)}>
-                    Close
-                  </button>
-                )}
-                {req.status === "CLOSED" && (
-                  <button className="button button--ghost" onClick={()=>reopenComplaint(req._id)}>
-                    Reopen
-                  </button>
-                )}
-                {role === "admin" && (
-                  <button className="button button--danger" onClick={()=>deleteComplaint(req._id)}>Delete</button>
-                )}
-              </div>
-            </div>
+          {complaints?.map((complaint) => (
+            <ComplaintCard
+              key={complaint._id}
+              complaint={complaint}
+              technicians={technicians || []}
+              onAssign={assignComplaint}
+              onClose={closeComplaint}
+              onReopen={reopenComplaint}
+              onDelete={deleteComplaint}
+            />
           ))}
         </div>
       </div>
