@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm ci --prefix campus-frontend",
+  "installCommand": "npm install --prefix campus-frontend",
   "buildCommand": "npm run build --prefix campus-frontend",
   "outputDirectory": "campus-frontend/dist",
   "rewrites": [
