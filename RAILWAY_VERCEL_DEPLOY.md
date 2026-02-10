@@ -23,9 +23,12 @@ This repo contains:
 1. Import the same GitHub repo into Vercel.
 2. Set **Root Directory** to `campus-frontend`.
 3. Set environment variable:
-   `VITE_API_URL` = your Railway backend origin (do not include `/api`)
+   `API_ORIGIN` = your Railway backend origin (do not include `/api`)
    Example: `https://<your-railway-domain>`
-4. Deploy. The frontend will call `${VITE_API_URL}/api/...` endpoints (for example: `/api/auth/login`, `/api/complaints`).
+4. Deploy. The frontend calls same-origin `/api/*`, and Vercel proxies it to Railway via `campus-frontend/api/[...path].js`.
+
+Optional:
+Set `VITE_API_URL` if you want the frontend to call Railway directly (not recommended, requires CORS).
 
 ## Notes
 

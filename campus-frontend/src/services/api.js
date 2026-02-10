@@ -20,12 +20,13 @@ const withApiPrefix = (base) => {
 
 const API = axios.create({
   // Default all requests to the backend's `/api` prefix.
-  // Local dev: http://localhost:5000/api
-  // Prod: set `VITE_API_URL` to your Railway backend origin, or rely on same-origin `/api` proxy.
+  // Recommended setup:
+  // - Dev: Vite proxy in `vite.config.js` forwards `/api/*` to http://localhost:5000
+  // - Prod (Vercel): a Serverless Function proxies `/api/*` to Railway (see `campus-frontend/api/[...path].js`)
+  // You can also bypass the proxy by setting `VITE_API_URL` to your backend origin.
   baseURL: (() => {
     const envBase = normalizeBaseUrl(import.meta.env.VITE_API_URL);
     if (envBase) return withApiPrefix(envBase);
-    if (import.meta.env.DEV) return "http://localhost:5000/api";
     return "/api";
   })(),
 });

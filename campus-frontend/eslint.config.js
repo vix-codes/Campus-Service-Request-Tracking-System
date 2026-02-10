@@ -6,7 +6,8 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 
 // Flat config without relying on `eslint/config` (not available in ESLint v8).
 export default [
-  { ignores: ['dist'] },
+  // Ignore build output and Vercel serverless functions (Node runtime).
+  { ignores: ['dist', 'api'] },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx}'],
