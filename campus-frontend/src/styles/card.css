@@ -1,0 +1,17 @@
+.card {
+    border-radius: var(--border-radius-card);
+    padding: var(--card-padding);
+    background: var(--card-white);
+    box-shadow: var(--card-shadow);
+    transition: var(--transition-main);
+  }
+  
+  .card:hover {
+    transform: var(--card-hover-transform);
+  }
+  
+  .dark .card {
+    background: var(--card-bg);
+    border: var(--border);
+  }
+  

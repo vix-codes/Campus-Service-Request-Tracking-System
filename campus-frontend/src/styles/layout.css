@@ -1,0 +1,20 @@
+.sidebar {
+    width: 220px;
+    border-radius: var(--border-radius-sidebar);
+    background: var(--card-white);
+  }
+  
+  .dark .sidebar {
+    background: var(--card-bg);
+  }
+  
+  .top-bar {
+    border-radius: var(--border-radius-top-bar);
+    background: var(--card-white);
+    padding: var(--top-bar-padding);
+  }
+  
+  .dark .top-bar {
+    background: var(--card-bg);
+  }
+  

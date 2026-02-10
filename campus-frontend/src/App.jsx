@@ -1,65 +1,75 @@
+import { useEffect, useState } from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
+import API from "./services/api";
+
+import Notice from "./components/Notice";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
-import TechnicianDashboard from "./pages/TechnicianDashboard";
+import Register from "./pages/Register";
 import TenantDashboard from "./pages/TenantDashboard";
-import NotificationBell from "./components/NotificationBell";
+import TechnicianDashboard from "./pages/TechnicianDashboard";
+import "./styles/theme.css";
+import "./styles/card.css";
+import "./styles/layout.css";
+import "./styles/button.css";
+import "./styles/login.css";
 
-const handleLogout = () => {
-  localStorage.clear();
-  window.location.reload();
+const App = () => {
+  const [notice, setNotice] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await API.get("/users/me");
+
+        if (response.status === 200) {
+          setUser(response.data);
+        } else {
+          throw new Error();
+        }
+      } catch {
+        setUser(null);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  return (
+    <>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      {notice && (
+        <Notice
+          message={notice.message}
+          tone={notice.tone}
+          onDismiss={() => setNotice(null)}
+        />
+      )}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/login"
+            element={<Login setUser={setUser} setNotice={setNotice} />}
+          />
+          <Route path="/register" element={<Register setNotice={setNotice} />} />
+
+          <Route
+            path="/tenant/dashboard"
+            element={<TenantDashboard user={user} setNotice={setNotice} />}
+          />
+          <Route
+            path="/technician/dashboard"
+            element={<TechnicianDashboard user={user} setNotice={setNotice} />}
+          />
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
 };
-
-// A wrapper for the main dashboard layout
-const Dashboard = ({ children }) => (
-  <>
-    <div className="topbar">
-      <div className="topbar__brand">Apartment Service</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <NotificationBell />
-        <button
-          onClick={handleLogout}
-          className="button button--ghost button--small"
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-    {children}
-  </>
-);
-
-// A simple router to render the correct dashboard based on the user's role
-const AppRouter = () => {
-  const role = localStorage.getItem("role");
-
-  let dashboardComponent;
-  switch (role) {
-    case "admin":
-    case "manager":
-      dashboardComponent = <AdminDashboard />;
-      break;
-    case "technician":
-      dashboardComponent = <TechnicianDashboard />;
-      break;
-    default:
-      dashboardComponent = <TenantDashboard />;
-      break;
-  }
-
-  return <Dashboard>{dashboardComponent}</Dashboard>;
-};
-
-function App() {
-  const token = localStorage.getItem("token");
-
-  // If no token is found, render the Login page
-  if (!token) {
-    return <Login />;
-  }
-
-  // Otherwise, render the appropriate dashboard
-  return <AppRouter />;
-}
 
 export default App;

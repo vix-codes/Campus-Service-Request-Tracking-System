@@ -1,0 +1,11 @@
+.button {
+    border-radius: var(--border-radius-pill);
+    padding: var(--button-padding);
+    border: 1px solid var(--border);
+  }
+  
+  .button:hover {
+    background: var(--primary-green);
+    color: white;
+  }
+  
