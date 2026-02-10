@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 
 import API from "./services/api";
 
 import Notice from "./components/NoticeBanner";
-import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import TenantDashboard from "./pages/TenantDashboard";
@@ -51,7 +50,7 @@ const App = () => {
       )}
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to=\"/login\" />} />
           <Route
             path="/login"
             element={<Login setUser={setUser} setNotice={setNotice} />}
