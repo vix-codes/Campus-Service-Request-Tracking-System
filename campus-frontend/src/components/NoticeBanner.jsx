@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 
 function NoticeBanner({ message, tone = "info", onClose }) {
@@ -6,10 +5,10 @@ function NoticeBanner({ message, tone = "info", onClose }) {
     if (message && onClose) {
       const timer = setTimeout(() => {
         onClose();
-      }, 5000); // Auto-dismiss after 5 seconds
-
+      }, 5000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [message, onClose]);
 
   if (!message) return null;
@@ -19,7 +18,7 @@ function NoticeBanner({ message, tone = "info", onClose }) {
       <span>{message}</span>
       {onClose && (
         <button type="button" className="notice__close" onClick={onClose}>
-          ✕
+          x
         </button>
       )}
     </div>

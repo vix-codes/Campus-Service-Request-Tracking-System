@@ -522,3 +522,233 @@ textarea {
   align-items: center;
   gap: var(--spacing-sm);
 }
+
+.button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.button--small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--primary-text);
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.icon-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--primary-accent-light);
+}
+
+.icon-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.spin {
+  animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.notification__button {
+  position: relative;
+}
+
+.notification__header {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notification__title {
+  padding: 0;
+  border: none;
+}
+
+.dashboard-layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--spacing-lg);
+  padding: var(--spacing-lg);
+}
+
+.dashboard-sidebar {
+  border: 1px solid var(--border-color);
+  border-radius: 18px;
+  background: var(--secondary-bg);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  transition: width 180ms ease;
+}
+
+.dashboard-sidebar--expanded {
+  width: 260px;
+  padding: var(--spacing-lg);
+}
+
+.dashboard-sidebar--collapsed {
+  width: 78px;
+  padding: var(--spacing-md);
+}
+
+.dashboard-sidebar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.dashboard-sidebar--collapsed .app-brand__text {
+  display: none;
+}
+
+.dashboard-sidebar__nav {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-nav-item {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--secondary-text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.dashboard-sidebar--collapsed .dashboard-nav-item {
+  justify-content: center;
+  padding: 10px 8px;
+}
+
+.dashboard-nav-item:hover {
+  background: var(--primary-accent-light);
+  color: var(--primary-text);
+}
+
+.dashboard-nav-item--active {
+  color: var(--primary-text);
+  background: var(--primary-accent-light);
+  border-color: var(--primary-accent-border);
+}
+
+.dashboard-nav-item__icon {
+  flex: 0 0 auto;
+}
+
+.dashboard-main {
+  display: grid;
+  align-content: start;
+  gap: var(--spacing-lg);
+}
+
+.dashboard-topbar {
+  display: grid;
+  grid-template-columns: 1fr minmax(180px, 360px) auto;
+  gap: var(--spacing-md);
+  align-items: center;
+  margin: 0;
+}
+
+.dashboard-topbar__greeting {
+  font-weight: var(--font-weight-bold);
+}
+
+.dashboard-topbar__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.dashboard-main__content {
+  min-width: 0;
+}
+
+.section--first {
+  margin-top: 0;
+}
+
+.section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.global-settings {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 1000;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.global-settings__panel {
+  padding: var(--spacing-sm);
+}
+
+.global-settings__toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--secondary-bg);
+  backdrop-filter: blur(8px);
+}
+
+.global-settings__theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 980px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+    padding: var(--spacing-md);
+  }
+
+  .dashboard-sidebar {
+    width: 100%;
+  }
+
+  .dashboard-topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-topbar__actions {
+    justify-content: space-between;
+  }
+}

@@ -8,7 +8,6 @@ import Register from "../pages/Register";
 import AdminDashboard from "../pages/AdminDashboard";
 import TenantDashboard from "../pages/TenantDashboard";
 import TechnicianDashboard from "../pages/TechnicianDashboard";
-import DashboardLayout from "../layouts/DashboardLayout";
 
 // A component to protect routes that require authentication
 const PrivateRoute = ({ children, requiredRoles }) => {
@@ -66,9 +65,7 @@ const AppRouter = () => {
           path="/admin-dashboard"
           element={
             <PrivateRoute requiredRoles={["admin", "manager"]}>
-              <DashboardLayout>
-                <AdminDashboard />
-              </DashboardLayout>
+              <AdminDashboard />
             </PrivateRoute>
           }
         />

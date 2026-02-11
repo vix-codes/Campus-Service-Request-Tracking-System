@@ -22,12 +22,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.clear();
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userId');
     setToken(null);
     setRole(null);
     setUserName(null);
     setUserId(null);
-    window.location.reload(); // Reload to clear all app state
   };
 
   const value = { token, role, userName, userId, login, logout };

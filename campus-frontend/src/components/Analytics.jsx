@@ -1,3 +1,6 @@
+import IconButton from "./IconButton";
+import { RefreshIcon } from "./icons";
+
 const msToHours = (ms) => {
   if (!ms || Number.isNaN(Number(ms))) return "0";
   return (Number(ms) / (1000 * 60 * 60)).toFixed(1);
@@ -13,14 +16,13 @@ const Analytics = ({ analytics, loading, onRefresh }) => {
     <div className="card">
       <div className="card__header">
         <h3>Analytics</h3>
-        <button
-          className="button button--ghost"
-          type="button"
+        <IconButton
           onClick={onRefresh}
           disabled={loading}
+          title={loading ? "Refreshing..." : "Refresh analytics"}
         >
-          {loading ? "Refreshing..." : "Refresh"}
-        </button>
+          <RefreshIcon className={loading ? "spin" : ""} />
+        </IconButton>
       </div>
 
       <div className="analytics">

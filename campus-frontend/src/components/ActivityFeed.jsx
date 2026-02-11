@@ -1,6 +1,8 @@
 
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import IconButton from "./IconButton";
+import { RefreshIcon } from "./icons";
 
 // A hook to fetch and manage the activity feed
 const useActivityFeed = () => {
@@ -42,9 +44,13 @@ function ActivityFeed() {
     <div className="section">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
         <h3>System Activity Timeline</h3>
-        <button className="button button--ghost" onClick={refetch} disabled={loading}>
-          {loading ? "Refreshing..." : "Refresh"}
-        </button>
+        <IconButton
+          onClick={refetch}
+          disabled={loading}
+          title={loading ? "Refreshing..." : "Refresh activity"}
+        >
+          <RefreshIcon className={loading ? "spin" : ""} />
+        </IconButton>
       </div>
 
       {loading && logs.length === 0 && <p className="muted">Loading activity...</p>}

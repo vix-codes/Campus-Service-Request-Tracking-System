@@ -1,77 +1,118 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import useFetch from "../hooks/useFetch";
 import NoticeBanner from "../components/NoticeBanner";
-import NotificationBell from "../components/NotificationBell";
 import TechnicianComplaintCard from "../components/TechnicianComplaintCard";
-import AppBrand from "../components/AppBrand";
+import DashboardShell from "../components/DashboardShell";
+import IconButton from "../components/IconButton";
+import { DashboardIcon, FileIcon, RefreshIcon } from "../components/icons";
+
+const sections = {
+  DASHBOARD: "dashboard",
+  COMPLAINTS: "complaints",
+};
 
 const TechnicianDashboard = () => {
-  const { userName, logout } = useAuth();
+  const { userName } = useAuth();
   const [notice, setNotice] = useState(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [activeSection, setActiveSection] = useState(sections.DASHBOARD);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: complaints, loading, refetch } = useFetch("/complaints");
+  const {
+    data: latestUnclosed,
+    loading: latestLoading,
+    refetch: refetchLatest,
+  } = useFetch("/complaints?includeClosed=false&limit=8");
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.body.classList.toggle("dark");
-  };
+  const filteredComplaints = useMemo(() => {
+    const list = complaints || [];
+    if (!searchTerm.trim()) return list;
+    const needle = searchTerm.trim().toLowerCase();
+    return list.filter((complaint) =>
+      [complaint.title, complaint.description, complaint.token, complaint.status]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(needle)
+    );
+  }, [complaints, searchTerm]);
+
+  const navItems = [
+    { key: sections.DASHBOARD, label: "Dashboard", icon: DashboardIcon },
+    { key: sections.COMPLAINTS, label: "Assigned Complaints", icon: FileIcon },
+  ];
+
+  const renderComplaintGrid = (list) => (
+    <div className="grid">
+      {list.map((complaint) => (
+        <TechnicianComplaintCard
+          key={complaint._id}
+          complaint={complaint}
+          setNotice={setNotice}
+          onUpdated={() => {
+            refetch();
+            refetchLatest();
+          }}
+        />
+      ))}
+    </div>
+  );
 
   return (
-    <div className={`app-layout ${isDarkMode ? "dark" : ""}`}>
-      <aside className="sidebar">
-        <div className="sidebar__logo">
-          <AppBrand size="sm" label="ASRT" />
-        </div>
-        <nav className="sidebar__nav">
-          <ul>
-            <li className="active">Dashboard</li>
-          </ul>
-        </nav>
-      </aside>
+    <DashboardShell
+      greeting={`Welcome, ${userName || "Technician"}`}
+      navItems={navItems}
+      activeSection={activeSection}
+      onSectionChange={setActiveSection}
+      sidebarExpanded={sidebarExpanded}
+      onToggleSidebar={() => setSidebarExpanded((prev) => !prev)}
+      searchValue={searchTerm}
+      onSearchChange={setSearchTerm}
+    >
+      <NoticeBanner message={notice?.message} tone={notice?.tone} onClose={() => setNotice(null)} />
 
-      <main className="main-content">
-        <header className="top-bar">
-          <div>Welcome, {userName || "Technician"}</div>
-          <input type="search" placeholder="Search..." />
-          <div className="top-bar__actions">
-            <NotificationBell />
-            <button className="button button--ghost button--small" onClick={toggleDarkMode}>
-              Toggle Theme
-            </button>
-            <button className="button button--ghost button--small" onClick={logout}>
-              Logout
-            </button>
+      {activeSection === sections.DASHBOARD && (
+        <section className="section section--first">
+          <div className="section__header">
+            <div>
+              <h3>Latest Unclosed Assigned Complaints</h3>
+              <p className="muted">Recent assigned complaints that are still active.</p>
+            </div>
+            <IconButton
+              onClick={refetchLatest}
+              disabled={latestLoading}
+              title={latestLoading ? "Refreshing..." : "Refresh dashboard"}
+            >
+              <RefreshIcon className={latestLoading ? "spin" : ""} />
+            </IconButton>
           </div>
-        </header>
+          {!(latestUnclosed || []).length && <p className="muted">No active assigned complaints.</p>}
+          {renderComplaintGrid(latestUnclosed || [])}
+        </section>
+      )}
 
-        <NoticeBanner
-          message={notice?.message}
-          tone={notice?.tone}
-          onClose={() => setNotice(null)}
-        />
-
-        <div className="section">
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <h3>Your Assigned Complaints</h3>
-            <button className="button button--ghost" onClick={refetch} disabled={loading}>
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
+      {activeSection === sections.COMPLAINTS && (
+        <section className="section section--first">
+          <div className="section__header">
+            <div>
+              <h3>All Assigned Complaints</h3>
+              <p className="muted">Start work, complete, or reject with reason.</p>
+            </div>
+            <IconButton
+              onClick={refetch}
+              disabled={loading}
+              title={loading ? "Refreshing..." : "Refresh complaints"}
+            >
+              <RefreshIcon className={loading ? "spin" : ""} />
+            </IconButton>
           </div>
-          <div className="grid">
-            {(complaints || []).map((complaint) => (
-              <TechnicianComplaintCard
-                key={complaint._id}
-                complaint={complaint}
-                setNotice={setNotice}
-                onUpdated={refetch}
-              />
-            ))}
-          </div>
-        </div>
-      </main>
-    </div>
+          {filteredComplaints.length === 0 && <p className="muted">No complaints match your search.</p>}
+          {renderComplaintGrid(filteredComplaints)}
+        </section>
+      )}
+    </DashboardShell>
   );
 };
 

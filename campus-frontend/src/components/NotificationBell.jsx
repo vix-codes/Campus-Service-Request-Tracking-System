@@ -1,6 +1,8 @@
 
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import IconButton from "./IconButton";
+import { BellIcon, RefreshIcon } from "./icons";
 
 const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -25,8 +27,8 @@ const useNotifications = () => {
   const markRead = async (id) => {
     try {
       await API.put(`/notifications/${id}/read`);
-      setNotifications(
-        notifications.map((n) => (n._id === id ? { ...n, isRead: true } : n))
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n))
       );
     } catch (err) {
       console.error("mark read", err);
@@ -53,14 +55,16 @@ function NotificationBell() {
   return (
     <div className="notification">
       <button
-        className="notification__button"
+        className="notification__button icon-button"
         onClick={() => {
           setOpen(!open);
           if (!open) refetch();
         }}
         type="button"
+        aria-label="Notifications"
+        title="Notifications"
       >
-        <span aria-hidden>Alerts</span>
+        <BellIcon />
         {unreadCount > 0 && (
           <span className="notification__badge">{unreadCount}</span>
         )}
@@ -70,9 +74,13 @@ function NotificationBell() {
         <div className="notification__panel">
           <div className="notification__header">
             <div className="notification__title">Notifications</div>
-            <button className="button button--ghost" onClick={refetch} disabled={loading}>
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
+            <IconButton
+              onClick={refetch}
+              disabled={loading}
+              title={loading ? "Refreshing..." : "Refresh notifications"}
+            >
+              <RefreshIcon className={loading ? "spin" : ""} />
+            </IconButton>
           </div>
           {loading && notifications.length === 0 && (
             <div className="notification__empty">Loading notifications...</div>

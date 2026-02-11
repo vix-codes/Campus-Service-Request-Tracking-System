@@ -26,6 +26,29 @@ const normalizeCategory = (category) => {
   return String(category).trim().toLowerCase() || "general";
 };
 
+const normalizeImage = (image) => {
+  if (!image) return "";
+  const value = String(image).trim();
+  if (!value) return "";
+
+  const isHttpUrl = /^https?:\/\/.+/i.test(value);
+  const isDataImage =
+    /^data:image\/(png|jpe?g|gif|webp|bmp|svg\+xml);base64,[a-z0-9+/=\s]+$/i.test(
+      value
+    );
+
+  if (!isHttpUrl && !isDataImage) {
+    return null;
+  }
+
+  // Keep payload bounded when base64 image is sent.
+  if (isDataImage && value.length > 8 * 1024 * 1024) {
+    return null;
+  }
+
+  return value;
+};
+
 const generateToken = async () => {
   const year = new Date().getFullYear();
   const prefix = `APT-${year}-`;
@@ -57,13 +80,20 @@ exports.createComplaint = async (req, res) => {
       return res.status(400).json({ message: "Title & description required" });
     }
 
+    const normalizedImage = normalizeImage(image);
+    if (normalizedImage === null) {
+      return res.status(400).json({
+        message: "Image must be a valid URL or base64 data URL (max 8MB)",
+      });
+    }
+
     const token = await generateToken();
     const priority = detectPriority(`${title} ${description}`);
 
     const complaint = await Complaint.create({
       title,
       description,
-      image: image || "",
+      image: normalizedImage || "",
       category: normalizeCategory(category),
       priority,
       token,
@@ -97,6 +127,12 @@ exports.getComplaints = async (req, res) => {
   try {
     const role = req.user.role;
     const userId = req.user.id;
+    const {
+      status,
+      excludeStatus,
+      includeClosed = "true",
+      limit,
+    } = req.query;
 
     const filter = {};
     if (role === "tenant") {
@@ -105,7 +141,36 @@ exports.getComplaints = async (req, res) => {
       filter.assignedTo = userId;
     }
 
-    const complaints = await Complaint.find(filter)
+    const statuses = [
+      "NEW",
+      "ASSIGNED",
+      "IN_PROGRESS",
+      "COMPLETED",
+      "CLOSED",
+      "REJECTED",
+    ];
+    if (status && statuses.includes(String(status).toUpperCase())) {
+      filter.status = String(status).toUpperCase();
+    }
+
+    const exclude = String(excludeStatus || "").toUpperCase();
+    const shouldExcludeClosed =
+      String(includeClosed).toLowerCase() === "false" || exclude === "CLOSED";
+    if (shouldExcludeClosed) {
+      if (filter.status) {
+        if (filter.status === "CLOSED") {
+          return res.json({ success: true, data: [] });
+        }
+      } else {
+        filter.status = { $ne: "CLOSED" };
+      }
+    }
+
+    const parsedLimit = Number(limit);
+    const hasLimit =
+      Number.isInteger(parsedLimit) && parsedLimit > 0 && parsedLimit <= 100;
+
+    let query = Complaint.find(filter)
       .populate("createdBy", "name role")
       .populate("assignedTo", "name role")
       .populate("assignedBy", "name role")
@@ -113,6 +178,12 @@ exports.getComplaints = async (req, res) => {
       .populate("closedBy", "name role")
       .populate("rejectedBy", "name role")
       .sort({ createdAt: -1 });
+
+    if (hasLimit) {
+      query = query.limit(parsedLimit);
+    }
+
+    const complaints = await query;
 
     res.json({ success: true, data: complaints });
   } catch (err) {
